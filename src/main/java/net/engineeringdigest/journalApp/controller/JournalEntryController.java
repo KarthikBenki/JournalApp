@@ -118,4 +118,61 @@ public class JournalEntryController {
             return new JournalEntry();                  // Returns an empty object — not ideal
         }
     }
+
+    /**
+     * DELETE /journal/id/{id}
+     * Deletes the journal entry with the given ID.
+     *
+     * @param id - The unique identifier of the journal entry to delete (from URL path variable)
+     * @return true if the entry existed and was removed, false if the entry was not found or an error occurred
+     *
+     * Notes:
+     *  - Returning a Boolean is simple but not expressive; prefer ResponseEntity<Void> with
+     *    HTTP 204 (No Content) on success and 404 (Not Found) when the ID does not exist.
+     *  - This method checks containsKey() then remove() to indicate whether removal occurred.
+     */
+    @DeleteMapping("/id/{id}")
+    public Boolean deleteById(@PathVariable Long id) {
+        try {
+            if (!journalEntryMap.containsKey(id)) { // If the key doesn't exist, nothing to delete
+                return false;
+            }
+            journalEntryMap.remove(id); // Remove the entry from the in-memory map
+            return true; // Indicate successful deletion
+        } catch (Exception e) {
+            // Prefer proper exception handling; logging/metrics would be helpful here
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // IMPLEMENTATION NOTES (placed at end of class)
+    // ─────────────────────────────────────────────
+    // - Thread-safety: This controller uses a plain HashMap which is NOT thread-safe.
+    //   If the app will handle concurrent requests (typical for web apps), replace
+    //   with a ConcurrentHashMap or add synchronization around accesses.
+    //
+    // - Error handling: Methods currently return primitive success indicators or
+    //   empty objects on error. For clear API semantics, return ResponseEntity<T>
+    //   and use proper HTTP status codes (e.g., 201 Created, 400 Bad Request,
+    //   404 Not Found, 500 Internal Server Error). Use @ControllerAdvice for
+    //   centralized exception handling.
+    //
+    // - ID generation: The randomIdGenerator() creates time-ordered IDs suitable for
+    //   in-memory/demo use. For production, prefer DB-generated IDs, UUIDs, or a
+    //   robust distributed ID generator (e.g., Snowflake) if you need uniqueness
+    //   across multiple instances.
+    //
+    // - Persistence: This implementation is in-memory and data will be lost on
+    //   application restart. Integrate JPA/Hibernate or another persistence
+    //   mechanism when moving beyond prototypes.
+    //
+    // - Tests: Add unit tests for the controller and integration tests for the
+    //   API endpoints (use MockMvc or WebTestClient). Also test concurrent access
+    //   scenarios if you switch to a shared in-memory store.
+    //
+    // - Validation: Validate request bodies (e.g., @Valid + javax.validation)
+    //   so malformed or incomplete journal entries are rejected with 400.
+
 }
