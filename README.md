@@ -91,6 +91,19 @@ The server will start on `http://localhost:8081`
     ```
   - Response: The created `JournalEntry` with auto-generated ID
 
+- **GET** `/journal/id/{id}`
+  - Retrieves a single journal entry by ID
+  - Example: `http://localhost:8081/journal/id/1653456789000123456`
+
+- **PUT** `/journal/id/{id}`
+  - Updates an existing journal entry with the given ID
+  - Request Body (JSON): same shape as POST; the server will use the URL id for the update
+  - Response: The updated `JournalEntry`
+
+- **DELETE** `/journal/id/{id}`
+  - Deletes the journal entry with the given ID
+  - Response: boolean true on success, false if not found (note: consider switching to proper HTTP codes)
+
 ## ID Generation
 
 IDs are generated using timestamp + random suffix to ensure:
