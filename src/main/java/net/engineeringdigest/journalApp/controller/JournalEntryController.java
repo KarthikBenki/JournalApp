@@ -146,6 +146,52 @@ public class JournalEntryController {
         }
     }
 
+    /**
+     * PUT /journal/id/{id}
+     * Updates an existing journal entry identified by the given ID.
+     *
+     * @param id    - The unique identifier of the entry to update (from URL path)
+     * @param entry - The updated journal entry data from the request body
+     * @return the updated JournalEntry on success,
+     *         or an empty JournalEntry if not found or an error occurs
+     *
+     * ⚠️ BUG IN ORIGINAL: journalEntryMap.put(entry.getId(), entry) uses the ID
+     *    from the request BODY, not from the URL path variable.
+     *    If the client sends a different ID in the body, it creates a new entry
+     *    instead of updating the existing one. Always use the path {id} for updates.
+     *
+     * ⚠️ Returning an empty JournalEntry on not-found or error is misleading.
+     *    In production, return ResponseEntity<JournalEntry> with:
+     *    - HTTP 200 (OK)       on success
+     *    - HTTP 404 (Not Found) if ID doesn't exist
+     *    - HTTP 400 (Bad Request) if body is invalid
+     */
+    @PutMapping("/id/{id}")
+    public JournalEntry updateJournal(@PathVariable Long id, @RequestBody JournalEntry entry) {
+        try {
+            // Guard clause: return early if the entry doesn't exist
+            if (!journalEntryMap.containsKey(id)) {
+                // ⚠️ Prefer: throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Entry not found: " + id);
+                return new JournalEntry();
+            }
+
+            // ✅ FIX: Always use the path variable `id`, not entry.getId()
+            //    This ensures the correct entry is updated regardless of what
+            //    ID the client sends inside the request body.
+            entry.setId(id);
+            journalEntryMap.put(id, entry); // Replace the existing entry with updated data
+
+            return entry; // Return the updated entry
+
+        } catch (Exception e) {
+            // ⚠️ Swallowing exceptions is bad practice.
+            //    Prefer: throw new RuntimeException("Failed to update entry with ID: " + id, e);
+            //    Or use @ControllerAdvice for centralized global exception handling.
+            e.printStackTrace();
+            return new JournalEntry(); // Returns empty object — not meaningful to the client
+        }
+    }
+
     // ─────────────────────────────────────────────
     // IMPLEMENTATION NOTES (placed at end of class)
     // ─────────────────────────────────────────────
