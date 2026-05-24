@@ -90,4 +90,32 @@ public class JournalEntryController {
             return new JournalEntry(); // Returns an empty object — not ideal
         }
     }
+
+    /**
+     * GET /journal/id/{id}
+     * Retrieves a single journal entry by its ID.
+     *
+     * @param id - The unique identifier of the journal entry to retrieve (from URL path variable)
+     * @return the JournalEntry object if found,
+     *         or an empty JournalEntry if not found or an error occurs
+     *
+     * ⚠️ Returning an empty JournalEntry is misleading to the client.
+     *    In production, throw a proper exception or return ResponseEntity with
+     *    HTTP 404 (Not Found) if the entry doesn't exist, or 500 on server error.
+     *
+     * @apiNote This method uses HashMap.get() which returns null if key doesn't exist.
+     *          Consider handling null gracefully or returning an Optional<JournalEntry>.
+     */
+    @GetMapping("/id/{id}")                             // Maps to GET /journal/id/{id}
+    public JournalEntry findById(@PathVariable Long id) { // Extract 'id' from URL path
+        try {
+            return journalEntryMap.get(id);             // Retrieve entry by ID from map (nullable)
+        } catch (Exception e) {
+            // ⚠️ Swallowing the exception with printStackTrace is a bad practice.
+            //    Prefer: throw new RuntimeException("Failed to retrieve entry with ID: " + id, e);
+            //    Or use @ExceptionHandler / @ControllerAdvice for global error handling.
+            e.printStackTrace();
+            return new JournalEntry();                  // Returns an empty object — not ideal
+        }
+    }
 }
